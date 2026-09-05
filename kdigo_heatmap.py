@@ -11,9 +11,18 @@ License: MIT
 import argparse
 import csv
 import json
-import math
+import os
 import sys
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
+
+
+def _safe_path(path: str) -> str:
+    """Validate that a file path is safe (no directory traversal via ..)."""
+    # Check raw path components before normalization
+    parts = path.replace("\\", "/").split("/")
+    if ".." in parts:
+        raise ValueError(f"Path traversal detected: '{path}' contains '..' components.")
+    return os.path.abspath(os.path.normpath(path))
 
 
 def calculate_metrics(**kwargs) -> Dict[str, Any]:
@@ -66,7 +75,13 @@ def process_single(args) -> None:
 
 
 def process_batch(input_csv: str, output_csv: str) -> None:
-    with open(input_csv, mode="r", encoding="utf-8-sig") as f:
+    safe_input = _safe_path(input_csv)
+    safe_output = _safe_path(output_csv)
+
+    if not os.path.isfile(safe_input):
+        raise FileNotFoundError(f"Input CSV not found: '{input_csv}'")
+
+    with open(safe_input, mode="r", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
         fieldnames = list(reader.fieldnames or [])
         rows = list(reader)
@@ -82,7 +97,7 @@ def process_batch(input_csv: str, output_csv: str) -> None:
         row_dict["clinical_recommendation"] = calc_res["clinical_recommendation"]
         out_rows.append(row_dict)
 
-    with open(output_csv, mode="w", encoding="utf-8", newline="") as f:
+    with open(safe_output, mode="w", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=out_fields)
         writer.writeheader()
         writer.writerows(out_rows)

@@ -2,9 +2,10 @@
 FastAPI REST API Server for Kdigo Ckd Heatmap Classifier.
 """
 from typing import Dict, Any, List
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from .base import AuditLogger, PHIGuard
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
+from .base import AuditLogger, PHIGuard, SecurityException
 from .models import SystemTaskPayload, ConsensusDossier
 from .supervisor import SystemSupervisor
 
@@ -16,9 +17,16 @@ app = FastAPI(
     version="3.0.0-ENTERPRISE",
 )
 
+MAX_QUERY_LENGTH = 1000
+
 
 class ChatRequest(BaseModel):
-    query: str
+    query: str = Field(..., max_length=MAX_QUERY_LENGTH, description="Supervisory query string")
+
+
+@app.exception_handler(SecurityException)
+async def security_exception_handler(request: Request, exc: SecurityException):
+    return JSONResponse(status_code=400, content={"error": "Security violation", "detail": str(exc)})
 
 
 @app.get("/health")
@@ -43,11 +51,10 @@ def api_audit(payload: SystemTaskPayload):
 
 @app.post("/api/chat")
 def api_chat(req: ChatRequest):
-    try:
-        ans = supervisor.query_supervisory_chat(req.query)
-        return {"response": ans}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    if len(req.query.strip()) == 0:
+        raise HTTPException(status_code=400, detail="Query cannot be empty")
+    ans = supervisor.query_supervisory_chat(req.query)
+    return {"response": ans}
 
 
 @app.get("/api/audit/logs")

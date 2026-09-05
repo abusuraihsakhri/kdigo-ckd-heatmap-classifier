@@ -12,6 +12,13 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 from pydantic import BaseModel, Field
 
+# Load .env file if present
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 PHI_PATTERNS = [
     re.compile(r"\b(?:MRN|mrn)[:#\s-]*\d{4,10}\b", re.IGNORECASE),
     re.compile(r"\b\d{3}-\d{2}-\d{4}\b"),
@@ -57,7 +64,15 @@ class PHIGuard:
 class AuditTrail:
     """Cryptographic Tamper-Evident HMAC-SHA256 Audit Trail."""
     def __init__(self, secret_key: Optional[str] = None):
-        self.secret_key = (secret_key or os.getenv("AUDIT_SECRET_KEY", "kdigo-ckd-heatmap-classifier-master-audit-key-2026")).encode("utf-8")
+        key = secret_key or os.getenv("AUDIT_SECRET_KEY")
+        if not key:
+            raise SecurityException(
+                "AUDIT_SECRET_KEY environment variable is required. "
+                "Set a cryptographically random key before starting the application."
+            )
+        if len(key) < 16:
+            raise SecurityException("AUDIT_SECRET_KEY must be at least 16 characters long.")
+        self.secret_key = key.encode("utf-8")
         self.logs: List[Dict[str, Any]] = []
 
     def log(self, actor: str, actor_tier: str, event_type: str, details: Dict[str, Any]) -> Dict[str, Any]:
