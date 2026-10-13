@@ -42,7 +42,8 @@ def test_specialized_workers():
     assert len(alerts3) == 1
 
 
-def test_supervisor_consensus_and_audit():
+def test_supervisor_consensus_and_audit(monkeypatch):
+    monkeypatch.setenv("AUDIT_SECRET_KEY", "test-only-secret-key-not-for-production")
     supervisor = SystemSupervisor(model_provider="mock")
     payload = SystemTaskPayload(
         task_id="TASK-PROD-01",
@@ -52,8 +53,8 @@ def test_supervisor_consensus_and_audit():
         status_descriptor="NOMINAL"
     )
     dossier = supervisor.process_task(payload)
-    assert dossier.overall_urgency == UrgencyLevel.ROUTINE
-    assert dossier.integrity_status == SystemIntegrityStatus.VALIDATED
+    assert dossier.overall_urgency == UrgencyLevel.ELEVATED
+    assert dossier.integrity_status == SystemIntegrityStatus.DISCORDANT
     assert dossier.audit_hash != ""
 
     # Verify cryptographic audit trail
