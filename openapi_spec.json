@@ -1,112 +1,96 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Kdigo Ckd Heatmap Classifier API",
-    "description": "Enterprise Distributed Component Platform (Clinical & Cryptographic AI) adhering to CAP / CLSI / NIST Standards.",
-    "version": "3.0.0-ENTERPRISE",
-    "contact": {
-      "name": "Dr. Abu Suraih Sakhri",
-      "url": "https://github.com/abusuraihsakhri"
-    }
+    "title": "KDIGO CKD Risk Heatmap API",
+    "version": "3.1.0",
+    "description": "KDIGO 2024 GFR–albuminuria risk grouping. Not a CKD diagnosis; optional audit endpoint is a demonstration."
   },
   "paths": {
-    "/health": {
-      "get": {
-        "summary": "Health and metadata check",
+    "/api/classify": {
+      "post": {
+        "summary": "KDIGO 2024 eGFR/ACR risk category",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "egfr",
+                  "acr_mg_g"
+                ],
+                "properties": {
+                  "egfr": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "mL/min/1.73 m²"
+                  },
+                  "acr_mg_g": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "mg/g"
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "System optimal"
+            "description": "GFR stage, albuminuria stage, and four-tier risk classification"
+          },
+          "422": {
+            "description": "Input validation error"
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Server health",
+        "responses": {
+          "200": {
+            "description": "Status and version"
           }
         }
       }
     },
     "/metrics": {
       "get": {
-        "summary": "Prometheus operational metrics",
+        "summary": "JSON process-local counters",
         "responses": {
           "200": {
-            "description": "Prometheus text metrics"
+            "description": "Counters and status as JSON"
           }
         }
       }
     },
     "/api/audit": {
       "post": {
-        "summary": "Dispatch task payload across specialized workers",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "task_id": {
-                    "type": "string"
-                  },
-                  "target_identifier": {
-                    "type": "string"
-                  },
-                  "primary_metric": {
-                    "type": "number"
-                  },
-                  "secondary_metric": {
-                    "type": "number"
-                  },
-                  "status_descriptor": {
-                    "type": "string"
-                  },
-                  "is_critical_flag": {
-                    "type": "boolean"
-                  }
-                },
-                "required": [
-                  "task_id",
-                  "target_identifier",
-                  "primary_metric"
-                ]
-              }
-            }
-          }
-        },
+        "summary": "Demonstration rule-based audit; requires signing key",
         "responses": {
           "200": {
-            "description": "Consensus dossier with HMAC signature"
+            "description": "In-process audit dossier"
           }
         }
       }
     },
     "/api/chat": {
       "post": {
-        "summary": "Air-gapped supervisory conversational assistant",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "query": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "query"
-                ]
-              }
-            }
-          }
-        },
+        "summary": "Mock-only supervisor response",
         "responses": {
           "200": {
-            "description": "Supervisory response"
+            "description": "Deterministic mock response"
           }
         }
       }
     },
     "/api/audit/logs": {
       "get": {
-        "summary": "Retrieve and cryptographically verify HMAC audit trail",
+        "summary": "Process-local audit ledger and integrity result",
         "responses": {
           "200": {
-            "description": "Cryptographic audit trail"
+            "description": "HMAC-checked ledger entries; unauthenticated demo endpoint"
           }
         }
       }

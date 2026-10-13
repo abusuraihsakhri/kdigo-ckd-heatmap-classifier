@@ -6,6 +6,7 @@ import csv
 import json
 import os
 import sys
+from kdigo_heatmap import classify_ckd, process_batch as classify_batch
 from agents.models import SystemTaskPayload
 from agents.supervisor import SystemSupervisor
 from agents.base import AuditLogger, SecurityException
@@ -25,6 +26,14 @@ supervisor = SystemSupervisor(model_provider="mock")
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="kdigo-ckd-heatmap-classifier", description="Kdigo Ckd Heatmap Classifier")
     subparsers = parser.add_subparsers(dest="command", required=True)
+
+    # KDIGO clinical classification
+    p_single = subparsers.add_parser("single", help="Classify an eGFR/urine ACR pair")
+    p_single.add_argument("--egfr", type=float, required=True, help="mL/min/1.73 m²")
+    p_single.add_argument("--acr", type=float, required=True, help="urine ACR in mg/g")
+    p_ckd_batch = subparsers.add_parser("classify-batch", help="Classify CSV eGFR/ACR rows")
+    p_ckd_batch.add_argument("-i", "--input", required=True)
+    p_ckd_batch.add_argument("-o", "--output", default="results.csv")
 
     # Audit
     p_audit = subparsers.add_parser("audit", help="Run single task evaluation")
@@ -54,6 +63,20 @@ def main(argv=None):
 
     args = parser.parse_args(argv)
 
+    if args.command == "single":
+        try:
+            print(json.dumps(classify_ckd(args.egfr, args.acr), indent=2))
+            return 0
+        except ValueError as error:
+            parser.error(str(error))
+
+    if args.command == "classify-batch":
+        try:
+            classify_batch(args.input, args.output)
+            return 0
+        except (ValueError, FileNotFoundError, OSError) as error:
+            parser.error(str(error))
+
     if args.command == "audit":
         payload = SystemTaskPayload(
             task_id=args.task_id,
@@ -66,7 +89,7 @@ def main(argv=None):
         dossier = supervisor.process_task(payload)
         print("=" * 80)
         print(f"  KDIGO CKD HEATMAP CLASSIFIER")
-        print(f"  Domain: Clinical & Biomedical AI | Standard: CAP / CLSI / ISO Standards")
+        print(f"  Reference: KDIGO 2024 CKD Guideline | Rule-based demonstration")
         print(f"  Dossier ID: {dossier.dossier_id} | Urgency: [{dossier.overall_urgency.value}]")
         print("=" * 80)
         for a in dossier.alerts:
@@ -74,7 +97,7 @@ def main(argv=None):
             print(f"  Summary: {a.summary}")
             print(f"  Details: {a.technical_details}")
             print(f"  Action:  {a.actionable_remediation}")
-        print(f"\n  HMAC-SHA256 Audit Hash: {dossier.audit_hash}")
+        print(f"\n  Process-local HMAC-SHA256 Audit Hash: {dossier.audit_hash}")
         print("=" * 80)
         return 0
 

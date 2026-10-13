@@ -1,6 +1,6 @@
 """
 Enrichment Feature Implementation for kdigo-ckd-heatmap-classifier.
-Generated based on domain-specific requirements in specifications.
+Prototype placeholder engines. NOT validated for clinical use, AKI staging, drug interactions, trajectory estimation, or medical advice.
 """
 from dataclasses import dataclass, field
 from typing import Dict, Any, List, Optional, Tuple
@@ -38,14 +38,14 @@ class AkiStagingProgressionAlertsEngine:
 
         if primary_value > self.threshold * 2:
             status = "CRITICAL_ALERT"
-            alerts.append(f"AKI Staging Progression Alerts: Primary value {primary_value:.2f} breached critical threshold ({self.threshold * 2:.2f})")
-            recs.append("Initiate immediate protocol review and escalate to attending lead.")
+            alerts.append(f"AKI Staging Progression Alerts: Primary value {primary_value:.2f} exceeded a synthetic threshold ({self.threshold * 2:.2f})")
+            recs.append("Synthetic demonstration threshold only; do not infer an emergency or use this result for clinical decisions.")
         elif primary_value > self.threshold:
             status = "WARNING"
-            alerts.append(f"AKI Staging Progression Alerts: Value {primary_value:.2f} exceeds baseline threshold ({self.threshold:.2f})")
-            recs.append("Increase monitoring frequency and perform secondary verification.")
+            alerts.append(f"AKI Staging Progression Alerts: Value {primary_value:.2f} exceeds a synthetic threshold ({self.threshold:.2f})")
+            recs.append("Synthetic demonstration threshold only; review clinical data and validated guidance independently.")
         else:
-            recs.append("Parameters nominal under standard operating bounds.")
+            recs.append("No synthetic threshold crossing; this does not establish clinical normality.")
 
         res = AkiStagingProgressionAlertsEngineResult(
             feature_name="AKI Staging Progression Alerts",
@@ -88,14 +88,14 @@ class NephrotoxicDrugInteractionAlertingEngine:
 
         if primary_value > self.threshold * 2:
             status = "CRITICAL_ALERT"
-            alerts.append(f"Nephrotoxic Drug Interaction Alerting: Primary value {primary_value:.2f} breached critical threshold ({self.threshold * 2:.2f})")
-            recs.append("Initiate immediate protocol review and escalate to attending lead.")
+            alerts.append(f"Nephrotoxic Drug Interaction Alerting: Primary value {primary_value:.2f} exceeded a synthetic threshold ({self.threshold * 2:.2f})")
+            recs.append("Synthetic demonstration threshold only; do not infer an emergency or use this result for clinical decisions.")
         elif primary_value > self.threshold:
             status = "WARNING"
-            alerts.append(f"Nephrotoxic Drug Interaction Alerting: Value {primary_value:.2f} exceeds baseline threshold ({self.threshold:.2f})")
-            recs.append("Increase monitoring frequency and perform secondary verification.")
+            alerts.append(f"Nephrotoxic Drug Interaction Alerting: Value {primary_value:.2f} exceeds a synthetic threshold ({self.threshold:.2f})")
+            recs.append("Synthetic demonstration threshold only; review clinical data and validated guidance independently.")
         else:
-            recs.append("Parameters nominal under standard operating bounds.")
+            recs.append("No synthetic threshold crossing; this does not establish clinical normality.")
 
         res = NephrotoxicDrugInteractionAlertingEngineResult(
             feature_name="Nephrotoxic Drug Interaction Alerting",
@@ -138,14 +138,14 @@ class NephrologyConsultAutogenerationWithGfrTrajectoryGraphsEngine:
 
         if primary_value > self.threshold * 2:
             status = "CRITICAL_ALERT"
-            alerts.append(f"Nephrology Consult Auto-Generation with GFR Trajectory Graphs: Primary value {primary_value:.2f} breached critical threshold ({self.threshold * 2:.2f})")
-            recs.append("Initiate immediate protocol review and escalate to attending lead.")
+            alerts.append(f"Nephrology Consult Auto-Generation with GFR Trajectory Graphs: Primary value {primary_value:.2f} exceeded a synthetic threshold ({self.threshold * 2:.2f})")
+            recs.append("Synthetic demonstration threshold only; do not infer an emergency or use this result for clinical decisions.")
         elif primary_value > self.threshold:
             status = "WARNING"
-            alerts.append(f"Nephrology Consult Auto-Generation with GFR Trajectory Graphs: Value {primary_value:.2f} exceeds baseline threshold ({self.threshold:.2f})")
-            recs.append("Increase monitoring frequency and perform secondary verification.")
+            alerts.append(f"Nephrology Consult Auto-Generation with GFR Trajectory Graphs: Value {primary_value:.2f} exceeds a synthetic threshold ({self.threshold:.2f})")
+            recs.append("Synthetic demonstration threshold only; review clinical data and validated guidance independently.")
         else:
-            recs.append("Parameters nominal under standard operating bounds.")
+            recs.append("No synthetic threshold crossing; this does not establish clinical normality.")
 
         res = NephrologyConsultAutogenerationWithGfrTrajectoryGraphsEngineResult(
             feature_name="Nephrology Consult Auto-Generation with GFR Trajectory Graphs",
@@ -188,14 +188,14 @@ class PatientIdCurrentStatusEngine:
 
         if primary_value > self.threshold * 2:
             status = "CRITICAL_ALERT"
-            alerts.append(f"Patient: [ID] | Current Status: Primary value {primary_value:.2f} breached critical threshold ({self.threshold * 2:.2f})")
-            recs.append("Initiate immediate protocol review and escalate to attending lead.")
+            alerts.append(f"Patient: [ID] | Current Status: Primary value {primary_value:.2f} exceeded a synthetic threshold ({self.threshold * 2:.2f})")
+            recs.append("Synthetic demonstration threshold only; do not infer an emergency or use this result for clinical decisions.")
         elif primary_value > self.threshold:
             status = "WARNING"
-            alerts.append(f"Patient: [ID] | Current Status: Value {primary_value:.2f} exceeds baseline threshold ({self.threshold:.2f})")
-            recs.append("Increase monitoring frequency and perform secondary verification.")
+            alerts.append(f"Patient: [ID] | Current Status: Value {primary_value:.2f} exceeds a synthetic threshold ({self.threshold:.2f})")
+            recs.append("Synthetic demonstration threshold only; review clinical data and validated guidance independently.")
         else:
-            recs.append("Parameters nominal under standard operating bounds.")
+            recs.append("No synthetic threshold crossing; this does not establish clinical normality.")
 
         res = PatientIdCurrentStatusEngineResult(
             feature_name="Patient: [ID] | Current Status",
@@ -238,14 +238,14 @@ class GfrTrajectoryEngine:
 
         if primary_value > self.threshold * 2:
             status = "CRITICAL_ALERT"
-            alerts.append(f"GFR Trajectory: Primary value {primary_value:.2f} breached critical threshold ({self.threshold * 2:.2f})")
-            recs.append("Initiate immediate protocol review and escalate to attending lead.")
+            alerts.append(f"GFR Trajectory: Primary value {primary_value:.2f} exceeded a synthetic threshold ({self.threshold * 2:.2f})")
+            recs.append("Synthetic demonstration threshold only; do not infer an emergency or use this result for clinical decisions.")
         elif primary_value > self.threshold:
             status = "WARNING"
-            alerts.append(f"GFR Trajectory: Value {primary_value:.2f} exceeds baseline threshold ({self.threshold:.2f})")
-            recs.append("Increase monitoring frequency and perform secondary verification.")
+            alerts.append(f"GFR Trajectory: Value {primary_value:.2f} exceeds a synthetic threshold ({self.threshold:.2f})")
+            recs.append("Synthetic demonstration threshold only; review clinical data and validated guidance independently.")
         else:
-            recs.append("Parameters nominal under standard operating bounds.")
+            recs.append("No synthetic threshold crossing; this does not establish clinical normality.")
 
         res = GfrTrajectoryEngineResult(
             feature_name="GFR Trajectory",
@@ -288,14 +288,14 @@ class DrugRiskAssessmentEngine:
 
         if primary_value > self.threshold * 2:
             status = "CRITICAL_ALERT"
-            alerts.append(f"Drug Risk Assessment: Primary value {primary_value:.2f} breached critical threshold ({self.threshold * 2:.2f})")
-            recs.append("Initiate immediate protocol review and escalate to attending lead.")
+            alerts.append(f"Drug Risk Assessment: Primary value {primary_value:.2f} exceeded a synthetic threshold ({self.threshold * 2:.2f})")
+            recs.append("Synthetic demonstration threshold only; do not infer an emergency or use this result for clinical decisions.")
         elif primary_value > self.threshold:
             status = "WARNING"
-            alerts.append(f"Drug Risk Assessment: Value {primary_value:.2f} exceeds baseline threshold ({self.threshold:.2f})")
-            recs.append("Increase monitoring frequency and perform secondary verification.")
+            alerts.append(f"Drug Risk Assessment: Value {primary_value:.2f} exceeds a synthetic threshold ({self.threshold:.2f})")
+            recs.append("Synthetic demonstration threshold only; review clinical data and validated guidance independently.")
         else:
-            recs.append("Parameters nominal under standard operating bounds.")
+            recs.append("No synthetic threshold crossing; this does not establish clinical normality.")
 
         res = DrugRiskAssessmentEngineResult(
             feature_name="Drug Risk Assessment",
@@ -338,14 +338,14 @@ class RecommendedWorkupEngine:
 
         if primary_value > self.threshold * 2:
             status = "CRITICAL_ALERT"
-            alerts.append(f"Recommended Workup: Primary value {primary_value:.2f} breached critical threshold ({self.threshold * 2:.2f})")
-            recs.append("Initiate immediate protocol review and escalate to attending lead.")
+            alerts.append(f"Recommended Workup: Primary value {primary_value:.2f} exceeded a synthetic threshold ({self.threshold * 2:.2f})")
+            recs.append("Synthetic demonstration threshold only; do not infer an emergency or use this result for clinical decisions.")
         elif primary_value > self.threshold:
             status = "WARNING"
-            alerts.append(f"Recommended Workup: Value {primary_value:.2f} exceeds baseline threshold ({self.threshold:.2f})")
-            recs.append("Increase monitoring frequency and perform secondary verification.")
+            alerts.append(f"Recommended Workup: Value {primary_value:.2f} exceeds a synthetic threshold ({self.threshold:.2f})")
+            recs.append("Synthetic demonstration threshold only; review clinical data and validated guidance independently.")
         else:
-            recs.append("Parameters nominal under standard operating bounds.")
+            recs.append("No synthetic threshold crossing; this does not establish clinical normality.")
 
         res = RecommendedWorkupEngineResult(
             feature_name="Recommended Workup",
@@ -388,14 +388,14 @@ class FollowupEngine:
 
         if primary_value > self.threshold * 2:
             status = "CRITICAL_ALERT"
-            alerts.append(f"Follow-up: Primary value {primary_value:.2f} breached critical threshold ({self.threshold * 2:.2f})")
-            recs.append("Initiate immediate protocol review and escalate to attending lead.")
+            alerts.append(f"Follow-up: Primary value {primary_value:.2f} exceeded a synthetic threshold ({self.threshold * 2:.2f})")
+            recs.append("Synthetic demonstration threshold only; do not infer an emergency or use this result for clinical decisions.")
         elif primary_value > self.threshold:
             status = "WARNING"
-            alerts.append(f"Follow-up: Value {primary_value:.2f} exceeds baseline threshold ({self.threshold:.2f})")
-            recs.append("Increase monitoring frequency and perform secondary verification.")
+            alerts.append(f"Follow-up: Value {primary_value:.2f} exceeds a synthetic threshold ({self.threshold:.2f})")
+            recs.append("Synthetic demonstration threshold only; review clinical data and validated guidance independently.")
         else:
-            recs.append("Parameters nominal under standard operating bounds.")
+            recs.append("No synthetic threshold crossing; this does not establish clinical normality.")
 
         res = FollowupEngineResult(
             feature_name="Follow-up",

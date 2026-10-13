@@ -1,126 +1,80 @@
-"""
-Security and edge-case tests for kdigo-ckd-heatmap-classifier.
-"""
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
+"""Regression tests for path validation, input validation and HMAC integrity."""
 import os
 import pytest
-from agents.base import PHIGuard, AuditLogger, SecurityException, AuditTrail
-from kdigo_heatmap import calculate_metrics, process_batch, _safe_path
+from agents.base import PHIGuard, AuditTrail, SecurityException, AuditLogger
+from kdigo_heatmap import classify_ckd, process_batch, _safe_path
 
 
-class TestPathTraversalProtection:
-    """Verify that path traversal attacks are blocked."""
-
-    def test_reject_dotdot_relative(self):
-        with pytest.raises(ValueError, match="traversal"):
-            _safe_path("../etc/passwd")
-
-    def test_reject_dotdot_in_middle(self):
-        with pytest.raises(ValueError, match="traversal"):
-            _safe_path("data/../../etc/passwd")
-
-    def test_reject_absolute_traversal(self):
-        with pytest.raises(ValueError, match="traversal"):
-            _safe_path("C:\\Windows\\System32\\..\\..\\..\\secret.txt")
-
-    def test_accept_simple_relative(self):
-        result = _safe_path("data.csv")
-        assert os.path.isabs(result)
-
-    def test_accept_simple_absolute(self):
-        result = _safe_path(os.path.abspath("data.csv"))
-        assert os.path.isabs(result)
+@pytest.mark.parametrize("path", ["../etc/passwd", "data/../../secret", r"C:\\data\\..\\secret"])
+def test_path_traversal_rejected(path):
+    with pytest.raises(ValueError, match="traversal"):
+        _safe_path(path)
 
 
-class TestCalculateMetricsEdgeCases:
-    """Verify calculate_metrics handles edge cases."""
-
-    def test_empty_params(self):
-        result = calculate_metrics()
-        assert result["score"] == 1.0
-        assert result["inputs_evaluated"] == 0
-
-    def test_single_param(self):
-        result = calculate_metrics(v1=15.0)
-        assert result["score"] == 15.0
-        assert result["classification"] == "Moderate / Intermediate"
-
-    def test_string_values_ignored(self):
-        result = calculate_metrics(v1=10.0, name="test_patient")
-        assert result["score"] == 10.0
-        assert result["inputs_evaluated"] == 2
-
-    def test_high_score_classification(self):
-        result = calculate_metrics(v1=30.0, v2=20.0)
-        assert result["classification"] == "High / Severe"
-
-    def test_low_score_classification(self):
-        result = calculate_metrics(v1=5.0)
-        assert result["classification"] == "Low / Standard"
+def test_valid_absolute_path(tmp_path):
+    assert os.path.isabs(_safe_path(str(tmp_path / "data.csv")))
 
 
-class TestPHIGuardEnforcement:
-    """Verify PHI guard patterns are comprehensive."""
-
-    def test_blocks_ssn(self):
-        with pytest.raises(SecurityException):
-            PHIGuard.assert_no_phi("Patient SSN: 123-45-6789")
-
-    def test_blocks_mrn(self):
-        with pytest.raises(SecurityException):
-            PHIGuard.assert_no_phi("MRN-12345678")
-
-    def test_blocks_phone(self):
-        with pytest.raises(SecurityException):
-            PHIGuard.assert_no_phi("Contact: 555-123-4567")
-
-    def test_blocks_email(self):
-        with pytest.raises(SecurityException):
-            PHIGuard.assert_no_phi("patient@hospital.org")
-
-    def test_allows_safe_text(self):
-        PHIGuard.assert_no_phi("Analytical assay specimen KEY-001 optimal")
-
-    def test_redact_phi(self):
-        result = PHIGuard.redact_phi("Patient MRN-12345678 is stable")
-        assert "[REDACTED_IDENTIFIER]" in result
-        assert "MRN-12345678" not in result
+@pytest.mark.parametrize("bad", [-1, float("nan"), float("inf"), "abc", None, ""])
+def test_invalid_egfr_rejected(bad):
+    with pytest.raises(ValueError):
+        classify_ckd(bad, 30)
 
 
-class TestAuditTrailSecurity:
-    """Verify audit trail security requirements."""
-
-    def test_requires_secret_key(self):
-        os.environ.pop("AUDIT_SECRET_KEY", None)
-        with pytest.raises(SecurityException, match="AUDIT_SECRET_KEY"):
-            AuditTrail()
-
-    def test_rejects_short_key(self):
-        os.environ["AUDIT_SECRET_KEY"] = "short"
-        with pytest.raises(SecurityException, match="at least 16"):
-            AuditTrail()
-
-    def test_accepts_valid_key(self):
-        os.environ["AUDIT_SECRET_KEY"] = "valid-secret-key-2026"
-        trail = AuditTrail()
-        assert trail.secret_key == b"valid-secret-key-2026"
+@pytest.mark.parametrize("bad", [-1, float("nan"), float("-inf"), "abc", None, ""])
+def test_invalid_acr_rejected(bad):
+    with pytest.raises(ValueError):
+        classify_ckd(45, bad)
 
 
-class TestBatchProcessingEdgeCases:
-    """Verify batch processing handles edge cases."""
+@pytest.mark.parametrize("identifier", ["SSN: 123-45-6789", "MRN-12345678", "555-123-4567", "patient@hospital.org"])
+def test_identifier_guard(identifier):
+    with pytest.raises(SecurityException):
+        PHIGuard.assert_no_phi(identifier)
 
-    def test_missing_input_file(self, tmp_path):
-        with pytest.raises(FileNotFoundError):
-            process_batch(str(tmp_path / "nonexistent.csv"), str(tmp_path / "out.csv"))
 
-    def test_empty_csv(self, tmp_path):
-        csv_in = tmp_path / "empty.csv"
-        csv_out = tmp_path / "out.csv"
-        csv_in.write_text("Patient_ID,v1,v2\n", encoding="utf-8")
-        process_batch(str(csv_in), str(csv_out))
-        assert csv_out.exists()
-        content = csv_out.read_text()
-        assert "score" in content
+def test_identifier_redaction():
+    assert "MRN-12345678" not in PHIGuard.redact_phi("MRN-12345678")
+
+
+def test_audit_requires_secret(monkeypatch):
+    monkeypatch.delenv("AUDIT_SECRET_KEY", raising=False)
+    with pytest.raises(SecurityException, match="AUDIT_SECRET_KEY"):
+        AuditTrail()
+    monkeypatch.setenv("AUDIT_SECRET_KEY", "short")
+    with pytest.raises(SecurityException, match="at least 16"):
+        AuditTrail()
+
+
+def test_audit_hmac_verification_detects_modified_fields():
+    trail = AuditTrail(secret_key="unique-integration-test-key")
+    first = trail.log("system", "supervisor", "TEST", {"item": 1})
+    trail.log("system", "supervisor", "TEST", {"item": 2})
+    assert len(first["current_hash"]) == 64
+    assert trail.verify_integrity()
+    exported = trail.get_trail()
+    exported[0]["actor"] = "modified outside"
+    assert trail.verify_integrity()
+    trail.logs[0]["actor"] = "modified inside"
+    assert not trail.verify_integrity()
+
+
+def test_batch_empty_csv(tmp_path):
+    source, target = tmp_path / "in.csv", tmp_path / "out.csv"
+    source.write_text("egfr,acr_mg_g\n")
+    process_batch(str(source), str(target))
+    assert "stage,risk_category,error" in target.read_text()
+
+
+def test_batch_rejects_bad_headers(tmp_path):
+    source, target = tmp_path / "in.csv", tmp_path / "out.csv"
+    source.write_text("v1,v2\n12,3\n")
+    with pytest.raises(ValueError, match="headers"):
+        process_batch(str(source), str(target))
+
+
+def test_batch_rejects_same_file(tmp_path):
+    file = tmp_path / "data.csv"
+    file.write_text("egfr,acr_mg_g\n52,125\n")
+    with pytest.raises(ValueError, match="differ"):
+        process_batch(str(file), str(file))

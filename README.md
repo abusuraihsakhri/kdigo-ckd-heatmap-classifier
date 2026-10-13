@@ -1,209 +1,87 @@
-# KDIGO CKD Risk Heatmap & Progression Classifier
+# KDIGO CKD Risk Heatmap Classifier
 
-> **Domain:** Nephrology & Renal Replacement Protocols
-> **Reference Guidelines:** KDIGO & KDOQI Clinical Practice Guidelines
-
-<div align="center">
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB.svg?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.111%2B-009688.svg?logo=fastapi&logoColor=white)
-![Tests](https://img.shields.io/badge/Tests-28%20Passed-brightgreen.svg)
-![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker&logoColor=white)
-
-</div>
-
----
-
-## Overview
-
-Cross-tabulates eGFR (G1-G5) and Albuminuria (A1-A3) stages into KDIGO 4-tier risk categories (Low, Moderate, High, Very High). Provides a zero-dependency core implementation with CLI, batch CSV processing, FastAPI REST API, and HMAC-SHA256 tamper-evident audit logging.
-
-Author: Dr. Abu Suraih Sakhri
-License: MIT
-
----
+A deterministic KDIGO 2024 eGFR–albuminuria classification tool for research, education, and clinical-reference workflows. The browser application processes inputs locally and does not require a server.
 
 ## Features
 
-- **Single Evaluation:** Compute risk classification for individual patient metrics
-- **Batch Processing:** Process CSV files with multiple records
-- **REST API:** FastAPI-based OpenAPI 3.1 endpoints with Prometheus metrics
-- **Tamper-Evident Audit Trail:** HMAC-SHA256 chained cryptographic ledger
-- **Zero-PHI Guard:** Regex-based outbound PHI detection and redaction
-- **Path Traversal Protection:** Input validation on all file operations
-- **Enterprise Agent Framework:** Multi-worker evaluation with consensus scoring
+- Individual classification across all 18 KDIGO G1–G5 × A1–A3 cells and four prognosis risk groups.
+- Accessible, responsive, interactive heatmap with the selected risk cell highlighted.
+- Local CSV processing with row-level error reporting and CSV export (browser maximum: 5 MiB, 10,000 records).
+- Python CLI, CSV batch classification, and a FastAPI `POST /api/classify` endpoint.
+- Separate, optional rule-based audit workflow with an **in-memory**, HMAC-SHA256 integrity-checked ledger.
 
----
+**Clinical interpretation:** This classifies two measurements, not chronic kidney disease itself. CKD generally requires persistent abnormalities for at least three months; G1A1 and G2A1 do not establish CKD in the absence of other kidney damage. Individual prognosis and management require broader clinical assessment. This tool is not a medical device.
 
-## Installation
+## Open the application
 
-### Local Development
+Open `web/index.html` in a modern browser; no installation, network access, or Python is required. The static app can also be hosted on GitHub Pages using the repository's Pages workflow once Pages is enabled and a deployment is confirmed.
 
-```bash
-# Clone the repository
-git clone https://github.com/abusuraihsakhri/kdigo-ckd-heatmap-classifier.git
-cd kdigo-ckd-heatmap-classifier
+The interface runs on ordinary JavaScript, not browser Python or a backend. There are no external scripts or analytics. Uploaded CSV data and results remain in local browser memory, and the CSV download is generated locally. Avoid including patient identifiers; local processing alone does not confer regulatory compliance.
 
-# Create and activate virtual environment
-python -m venv .venv
-.venv\Scripts\activate  # Windows
-# source .venv/bin/activate  # Linux/Mac
+## Python usage
 
-# Install dependencies
-pip install -e ".[test]"
-
-# Set up environment variables
-cp .env.example .env
-# Edit .env and set a secure AUDIT_SECRET_KEY (min 16 characters)
-```
-
-### Docker
+Python 3.10+:
 
 ```bash
-# Create .env file first
-cp .env.example .env
-# Edit .env with secure values
-
-# Build and run
-docker compose up --build
+python -m pip install -e ".[test]"
+python kdigo_heatmap.py single --egfr 52 --acr 125
+python kdigo_heatmap.py batch -i sample.csv -o results.csv
+python cli.py single --egfr 52 --acr 125
+python cli.py classify-batch -i sample.csv -o results.csv
 ```
 
----
-
-## Usage
-
-### CLI Commands
-
-```bash
-# Single evaluation
-python cli.py single --v1 14.5 --v2 4.2 --v3 1.8
-
-# Batch processing
-python cli.py batch -i sample.csv -o results.csv
-
-# Enterprise agent audit (with HMAC audit trail)
-python cli.py audit --task-id PT-101 --target SPECIMEN-01 --primary 28.5 --secondary 14.2
-
-# Verify audit integrity
-python cli.py verify-audit
-
-# Launch REST API server
-python cli.py serve --host 127.0.0.1 --port 8000
-```
-
-### Direct Module Usage
-
-```bash
-# Single evaluation via module
-python kdigo_heatmap.py single --v1 12.0 --v2 4.0
-
-# Batch processing via module
-python kdigo_heatmap.py batch -i sample.csv -o output.csv
-```
-
-### Python API
+Python API:
 
 ```python
-from kdigo_heatmap import calculate_metrics
-
-result = calculate_metrics(v1=14.5, v2=4.2, v3=1.8)
-print(result["score"])           # 17.37
-print(result["classification"]) # "Moderate / Intermediate"
+from kdigo_heatmap import classify_ckd
+result = classify_ckd(52, 125)
+assert result["stage"] == "G3aA2"
+assert result["risk_category"] == "high"
 ```
 
----
+Batch CSV requires columns named `egfr` (mL/min/1.73 m²) and `acr_mg_g` (mg/g). Additional columns are retained; invalid rows contain an `error` value. Python batch imports are capped at 10 MiB.
 
-## REST API Endpoints
+The 2024 KDIGO thresholds are:
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/health` | GET | Health check and service metadata |
-| `/metrics` | GET | Prometheus operational metrics |
-| `/api/audit` | POST | Submit task for multi-worker evaluation |
-| `/api/chat` | POST | Supervisory chat query |
-| `/api/audit/logs` | GET | Retrieve and verify HMAC audit trail |
+| Measure | Categories |
+| --- | --- |
+| eGFR, mL/min/1.73 m² | G1 ≥90; G2 60–<90; G3a 45–<60; G3b 30–<45; G4 15–<30; G5 <15 |
+| Urine ACR, mg/g | A1 <30; A2 30–<300; A3 ≥300 |
 
-### Example API Request
+The risk matrix follows KDIGO 2024 **Figure 13**. At exactly **ACR = 300 mg/g**, Figure 13 labels the value **A3**, while Table 3 lists A2 as 30–300 mg/g and A3 as >300 mg/g. This tool follows Figure 13 for risk mapping and documents that inconsistency; verify local laboratory/reporting conventions at the boundary.
+
+## Optional API and legacy audit utilities
 
 ```bash
-curl -X POST http://localhost:8000/api/audit \
-  -H "Content-Type: application/json" \
-  -d '{
-    "task_id": "PT-101",
-    "target_identifier": "SPECIMEN-01",
-    "primary_metric": 28.5,
-    "secondary_metric": 14.2,
-    "status_descriptor": "DISCORDANT_ANOMALY"
-  }'
+export AUDIT_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(40))')"
+python cli.py serve
 ```
 
----
+`POST /api/classify` accepts JSON `{"egfr":52,"acr_mg_g":125}`; `GET /health` exposes service status. Other available endpoints are `POST /api/audit`, `POST /api/chat`, `GET /api/audit/logs`, and `GET /metrics`. These support an optional deterministic audit demonstration, not validated clinical triage. The chat response is **mock only**, with no external LLM.
 
-## Testing
+The audit endpoint's `primary_metric` means eGFR (mL/min/1.73 m²), and `secondary_metric` means urine ACR (mg/g). The explicit `is_critical_flag` is a caller-supplied workflow flag, not a KDIGO-derived emergency indication. The ledger is process-local, not persistent or externally notarized. A strong `AUDIT_SECRET_KEY` is required when signing entries. The identifier regex is **best-effort**, not a full PHI detection or de-identification solution. Do not expose the demonstration audit API publicly without authentication, authorization, storage, and privacy controls.
+
+For Docker, copy `.env.example` to `.env`, set a newly generated secret key, then run `docker compose up --build`.
+
+## Tests
 
 ```bash
-# Run full test suite (28 tests)
-pytest -v
-
-# Run with coverage
-pytest -v --cov=.
-
-# Run high-throughput simulation benchmark
-python simulator.py 1000
+python -m pytest -q
+node --test web/test_classifier.cjs
+node --check web/app.js
 ```
 
----
+Python tests require `AUDIT_SECRET_KEY` for audit actions (the CI workflow generates one). CI tests Python 3.10–3.12 and Node 22. The live browser/Pages deployment must be checked independently of local unit tests.
 
-## Security
+The optional `enrichment.py` engines use synthetic thresholds and are retained only for demonstration; they are not validated models for AKI staging, drug interactions, or clinical recommendations.
 
-- **Audit Trail Key:** The `AUDIT_SECRET_KEY` environment variable is **required**. Must be at least 16 characters. No default is provided.
-- **PHI Protection:** Outbound data is scanned for SSNs, MRNs, phone numbers, emails, and patient names.
-- **Path Traversal:** All file operations validate against `..` directory traversal attacks.
-- **Input Validation:** API endpoints enforce maximum query length and payload validation via Pydantic v2.
+## Technical notes
 
----
+- Python standard library for core risk classification; optional FastAPI/Pydantic for audit API.
+- Browser uses plain HTML, CSS, and JavaScript; works with current Chromium, Firefox, and Safari.
+- No Pyodide required; no server-side Python can run on GitHub Pages.
+- This is not a medical device, and no certification to CAP, CLSI, ISO, HIPAA, or equivalent regulations is claimed.
 
-## Project Structure
+**Reference:** [KDIGO 2024 Clinical Practice Guideline for the Evaluation and Management of Chronic Kidney Disease](https://kdigo.org/guidelines/ckd-evaluation-and-management/), Figure 13, Tables 2–3.
 
-```
-kdigo-ckd-heatmap-classifier/
-├── agents/                  # Enterprise agent framework
-│   ├── api.py              # FastAPI REST server
-│   ├── base.py             # Security, PHI guard, HMAC audit
-│   ├── models.py           # Pydantic v2 data models
-│   ├── supervisor.py       # Orchestrator & consensus engine
-│   ├── workers.py          # Specialized evaluation workers
-│   ├── llm_factory.py      # LLM provider abstraction
-│   ├── metrics.py          # Prometheus metrics collector
-│   ├── learning.py         # Bayesian calibration engine
-│   └── streamer.py         # WebSocket telemetry
-├── tests/                  # Test suite
-│   ├── test_security.py    # Security & edge-case tests
-│   ├── test_enrichment.py  # Enrichment module tests
-│   └── test_kdigo_ckd_heatmap_classifier.py  # Core agent tests
-├── web/index.html          # Operations dashboard
-├── kdigo_heatmap.py        # Core classification algorithm
-├── cli.py                  # CLI entry point
-├── enrichment.py           # Domain enrichment engines
-├── simulator.py            # Stress testing simulator
-├── Dockerfile              # Container build
-├── docker-compose.yml      # Container orchestration
-├── pyproject.toml          # Project metadata & dependencies
-└── .env.example            # Environment variable template
-```
-
----
-
-## Algorithm
-
-The core scoring algorithm computes a weighted sum of input metrics:
-
-```python
-score = primary_val + Σ(numeric_vals[i] * (1.0 / (i+1)))
-```
-
-Classification tiers:
-- **< 10.0:** Low / Standard risk
-- **10.0 - 24.99:** Moderate / Intermediate risk
-- **≥ 25.0:** High / Severe risk
+**License:** MIT (see [LICENSE](LICENSE)).
