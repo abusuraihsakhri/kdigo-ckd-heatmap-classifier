@@ -12,7 +12,7 @@ def test_gfr_boundaries(egfr, gfr):
 
 
 @pytest.mark.parametrize("acr,stage", [(0, "A1"), (29.999, "A1"), (30, "A2"),
-  (300, "A2"), (300.001, "A3")])
+  (300, "A3"), (299.999, "A2"), (300.001, "A3")])
 def test_acr_boundaries(acr, stage):
     assert classify_ckd(90, acr)["albuminuria_category"] == stage
 
