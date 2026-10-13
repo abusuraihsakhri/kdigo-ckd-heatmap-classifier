@@ -1,133 +1,146 @@
 #!/usr/bin/env python3
-"""
-KDIGO CKD Risk Heatmap & Progression Classifier
-Cross-tabulates eGFR (G1-G5) and Albuminuria (A1-A3) stages into KDIGO 4-tier risk categories.
+"""KDIGO 2024 CKD GFR–albuminuria risk heatmap.
 
-Zero-dependency Python implementation with single and batch evaluation.
-Author: Dr. Abu Suraih Sakhri
-License: MIT
+Risk classification is not a diagnosis or a patient-specific treatment decision.
+Source: KDIGO 2024 CKD Guideline, Figure 2 and Tables 2–3.
+https://kdigo.org/guidelines/ckd-evaluation-and-management/
 """
-
 import argparse
 import csv
 import json
+import math
 import os
-import sys
-from typing import Dict, Any
+from typing import Any, Dict
+
+GFR_CATEGORIES = ("G1", "G2", "G3a", "G3b", "G4", "G5")
+ALBUMINURIA_CATEGORIES = ("A1", "A2", "A3")
+# KDIGO four-tier risk grid (GFR row, albuminuria column).
+RISK_GRID = (
+    ("low", "moderately increased", "high"),
+    ("low", "moderately increased", "high"),
+    ("moderately increased", "high", "very high"),
+    ("high", "very high", "very high"),
+    ("very high", "very high", "very high"),
+    ("very high", "very high", "very high"),
+)
+CHRONICITY_NOTE = (
+    "A single eGFR/ACR result cannot diagnose CKD. Abnormalities must persist "
+    "for at least 3 months, or other qualifying evidence of chronic kidney disease "
+    "must be established."
+)
 
 
-def _safe_path(path: str) -> str:
-    """Validate that a file path is safe (no directory traversal via ..)."""
-    # Check raw path components before normalization
-    parts = path.replace("\\", "/").split("/")
-    if ".." in parts:
-        raise ValueError(f"Path traversal detected: '{path}' contains '..' components.")
-    return os.path.abspath(os.path.normpath(path))
+def _nonnegative_finite(value: Any, name: str) -> float:
+    try:
+        number = float(value)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError(f"{name} must be a finite, nonnegative number") from exc
+    if not math.isfinite(number) or number < 0:
+        raise ValueError(f"{name} must be a finite, nonnegative number")
+    return number
 
 
-def calculate_metrics(**kwargs) -> Dict[str, Any]:
+def classify_ckd(egfr: float, acr_mg_g: float) -> Dict[str, Any]:
+    """Classify eGFR (mL/min/1.73 m²) and urine ACR (mg/g) by KDIGO 2024.
+
+    ACR boundaries follow KDIGO 2024 Table 3: A1 <30, A2 30–300,
+    A3 >300 mg/g. Do not interpret this risk group as confirmed CKD.
     """
-    Core domain algorithm for kdigo-ckd-heatmap-classifier.
-    """
-    params = {}
-    for k, v in kwargs.items():
-        if v is not None:
-            try:
-                params[k] = float(v)
-            except (ValueError, TypeError):
-                params[k] = str(v)
-
-    # Deterministic domain logic
-    numeric_vals = [val for val in params.values() if isinstance(val, (int, float))]
-    primary_val = numeric_vals[0] if numeric_vals else 1.0
-
-    score = primary_val
-    for idx, nv in enumerate(numeric_vals[1:], start=2):
-        score += nv * (1.0 / idx)
-
-    rounded_score = round(score, 2)
-    
-    # Classification / tiering
-    if rounded_score < 10.0:
-        tier = "Low / Standard"
-        action = "Standard monitoring or negative cutoff"
-    elif rounded_score < 25.0:
-        tier = "Moderate / Intermediate"
-        action = "Close observation or secondary evaluation"
-    else:
-        tier = "High / Severe"
-        action = "Urgent clinical intervention or primary positive finding"
-
+    egfr = _nonnegative_finite(egfr, "egfr")
+    acr_mg_g = _nonnegative_finite(acr_mg_g, "acr_mg_g")
+    g = (0 if egfr >= 90 else 1 if egfr >= 60 else
+         2 if egfr >= 45 else 3 if egfr >= 30 else
+         4 if egfr >= 15 else 5)
+    a = 0 if acr_mg_g < 30 else 1 if acr_mg_g <= 300 else 2
+    risk = RISK_GRID[g][a]
     return {
-        "tool": "kdigo-ckd-heatmap-classifier",
-        "score": rounded_score,
-        "classification": tier,
-        "clinical_recommendation": action,
-        "inputs_evaluated": len(params),
+        "egfr": egfr,
+        "acr_mg_g": acr_mg_g,
+        "gfr_category": GFR_CATEGORIES[g],
+        "albuminuria_category": ALBUMINURIA_CATEGORIES[a],
+        "stage": f"{GFR_CATEGORIES[g]}{ALBUMINURIA_CATEGORIES[a]}",
+        "risk_category": risk,
+        "classification": risk,
+        "ckd_confirmed": None,
+        "clinical_note": CHRONICITY_NOTE + (
+            " If no other markers of kidney damage are present, G1A1 and "
+            "G2A1 do not meet CKD criteria."
+            if g <= 1 and a == 0 else ""
+        ),
+        "guideline": "KDIGO 2024 CKD Guideline",
     }
 
 
-def process_single(args) -> None:
-    kwargs = vars(args)
-    kwargs.pop("func", None)
-    res = calculate_metrics(**kwargs)
-    print(json.dumps(res, indent=2))
+def calculate_metrics(*, egfr: float, acr_mg_g: float) -> Dict[str, Any]:
+    """Backward-compatible function name with corrected clinical inputs."""
+    return classify_ckd(egfr, acr_mg_g)
+
+
+def _safe_path(path: str) -> str:
+    """Reject explicit .. path components (not a sandbox boundary)."""
+    if ".." in path.replace("\\", "/").split("/"):
+        raise ValueError("Path traversal detected")
+    return os.path.abspath(os.path.normpath(path))
 
 
 def process_batch(input_csv: str, output_csv: str) -> None:
-    safe_input = _safe_path(input_csv)
-    safe_output = _safe_path(output_csv)
-
-    if not os.path.isfile(safe_input):
-        raise FileNotFoundError(f"Input CSV not found: '{input_csv}'")
-
-    with open(safe_input, mode="r", encoding="utf-8-sig") as f:
-        reader = csv.DictReader(f)
-        fieldnames = list(reader.fieldnames or [])
+    """Classify CSV rows locally; retain invalid rows with an error column."""
+    src, dst = _safe_path(input_csv), _safe_path(output_csv)
+    if os.path.samefile(src, dst) if os.path.isfile(src) and os.path.isfile(dst) else src == dst:
+        raise ValueError("Input and output files must differ")
+    if not os.path.isfile(src):
+        raise FileNotFoundError(f"Input CSV not found: {input_csv}")
+    if os.path.getsize(src) > 10 * 1024 * 1024:
+        raise ValueError("Input CSV exceeds 10 MiB limit")
+    with open(src, newline="", encoding="utf-8-sig") as handle:
+        reader = csv.DictReader(handle)
+        columns = reader.fieldnames or []
+        if len(set(columns)) != len(columns) or not {"egfr", "acr_mg_g"} <= set(columns):
+            raise ValueError("CSV must include unique 'egfr' and 'acr_mg_g' headers")
+        if any(c is None or not c for c in columns):
+            raise ValueError("CSV column names cannot be empty")
         rows = list(reader)
-
-    out_fields = fieldnames + ["score", "classification", "clinical_recommendation"]
-    out_rows = []
-
-    for r in rows:
-        calc_res = calculate_metrics(**r)
-        row_dict = dict(r)
-        row_dict["score"] = calc_res["score"]
-        row_dict["classification"] = calc_res["classification"]
-        row_dict["clinical_recommendation"] = calc_res["clinical_recommendation"]
-        out_rows.append(row_dict)
-
-    with open(safe_output, mode="w", encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=out_fields)
+    results = []
+    for row in rows:
+        if None in row:
+            detail = "Unexpected extra CSV columns"
+            stage = risk = ""
+        else:
+            try:
+                result = classify_ckd(row["egfr"], row["acr_mg_g"])
+                stage, risk, detail = result["stage"], result["risk_category"], ""
+            except ValueError as exc:
+                stage, risk, detail = "", "", str(exc)
+        results.append({**{key: row.get(key, "") for key in columns},
+                        "stage": stage, "risk_category": risk, "error": detail})
+    fields = [c for c in columns if c not in ("stage", "risk_category", "error")]
+    fields += ["stage", "risk_category", "error"]
+    with open(dst, "w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields, extrasaction="ignore")
         writer.writeheader()
-        writer.writerows(out_rows)
-
-    print(f"Processed {len(out_rows)} records -> {output_csv}")
+        writer.writerows(results)
+    print(f"Processed {len(results)} records -> {output_csv}")
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="KDIGO CKD Risk Heatmap & Progression Classifier")
-    subparsers = parser.add_subparsers(dest="command", required=True)
-
-    # Single parser
-    single_parser = subparsers.add_parser("single", help="Evaluate single case")
-    single_parser.add_argument("--v1", type=float, default=10.0, help="Primary parameter")
-    single_parser.add_argument("--v2", type=float, default=5.0, help="Secondary parameter")
-    single_parser.add_argument("--v3", type=float, default=2.0, help="Tertiary parameter")
-    single_parser.set_defaults(func=process_single)
-
-    # Batch parser
-    batch_parser = subparsers.add_parser("batch", help="Process batch CSV")
-    batch_parser.add_argument("-i", "--input", required=True, help="Input CSV")
-    batch_parser.add_argument("-o", "--output", default="results.csv", help="Output CSV")
-
+    parser = argparse.ArgumentParser(description="KDIGO 2024 CKD GFR–albuminuria classifier")
+    sub = parser.add_subparsers(dest="command", required=True)
+    single = sub.add_parser("single", help="Classify an eGFR and urine ACR")
+    single.add_argument("--egfr", type=float, required=True, help="mL/min/1.73 m²")
+    single.add_argument("--acr", type=float, required=True, help="Urine ACR in mg/g")
+    batch = sub.add_parser("batch", help="Classify a CSV containing egfr,acr_mg_g")
+    batch.add_argument("-i", "--input", required=True)
+    batch.add_argument("-o", "--output", default="results.csv")
     args = parser.parse_args(argv)
-
-    if args.command == "single":
-        args.func(args)
-    elif args.command == "batch":
-        process_batch(args.input, args.output)
+    try:
+        if args.command == "single":
+            print(json.dumps(classify_ckd(args.egfr, args.acr), indent=2))
+        else:
+            process_batch(args.input, args.output)
+    except (ValueError, FileNotFoundError, OSError) as exc:
+        parser.error(str(exc))
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
