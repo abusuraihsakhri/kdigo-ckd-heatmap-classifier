@@ -89,7 +89,7 @@ def main(argv=None):
         dossier = supervisor.process_task(payload)
         print("=" * 80)
         print(f"  KDIGO CKD HEATMAP CLASSIFIER")
-        print(f"  Domain: Clinical & Biomedical AI | Standard: CAP / CLSI / ISO Standards")
+        print(f"  Reference: KDIGO 2024 CKD Guideline | Rule-based demonstration")
         print(f"  Dossier ID: {dossier.dossier_id} | Urgency: [{dossier.overall_urgency.value}]")
         print("=" * 80)
         for a in dossier.alerts:
@@ -97,7 +97,7 @@ def main(argv=None):
             print(f"  Summary: {a.summary}")
             print(f"  Details: {a.technical_details}")
             print(f"  Action:  {a.actionable_remediation}")
-        print(f"\n  HMAC-SHA256 Audit Hash: {dossier.audit_hash}")
+        print(f"\n  Process-local HMAC-SHA256 Audit Hash: {dossier.audit_hash}")
         print("=" * 80)
         return 0
 
