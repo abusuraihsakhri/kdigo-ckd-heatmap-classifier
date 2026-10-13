@@ -63,6 +63,8 @@ class AuditTrail:
         key = secret_key or os.getenv("AUDIT_SECRET_KEY")
         if not key:
             raise SecurityException("AUDIT_SECRET_KEY environment variable is required")
+        if key.startswith(("change-me", "example-", "test-only-", "placeholder")):
+            raise SecurityException("AUDIT_SECRET_KEY must be a newly generated secret, not an example key")
         if len(key) < 16:
             raise SecurityException("AUDIT_SECRET_KEY must be at least 16 characters long")
         self.secret_key = key.encode("utf-8")
