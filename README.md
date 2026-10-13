@@ -46,9 +46,9 @@ The 2024 KDIGO thresholds are:
 | Measure | Categories |
 | --- | --- |
 | eGFR, mL/min/1.73 m² | G1 ≥90; G2 60–<90; G3a 45–<60; G3b 30–<45; G4 15–<30; G5 <15 |
-| Urine ACR, mg/g | A1 <30; A2 30–300; A3 >300 |
+| Urine ACR, mg/g | A1 <30; A2 30–<300; A3 ≥300 |
 
-The risk matrix follows the 2024 KDIGO CKD prognosis figure; the ACR boundary at exactly 300 mg/g is classified as **A2** per KDIGO 2024 Table 3.
+The risk matrix follows KDIGO 2024 **Figure 13**. At exactly **ACR = 300 mg/g**, Figure 13 labels the value **A3**, while Table 3 lists A2 as 30–300 mg/g and A3 as >300 mg/g. This tool follows Figure 13 for risk mapping and documents that inconsistency; verify local laboratory/reporting conventions at the boundary.
 
 ## Optional API and legacy audit utilities
 
@@ -82,6 +82,6 @@ The optional `enrichment.py` engines use synthetic thresholds and are retained o
 - No Pyodide required; no server-side Python can run on GitHub Pages.
 - This is not a medical device, and no certification to CAP, CLSI, ISO, HIPAA, or equivalent regulations is claimed.
 
-**Reference:** [KDIGO 2024 Clinical Practice Guideline for the Evaluation and Management of Chronic Kidney Disease](https://kdigo.org/guidelines/ckd-evaluation-and-management/), Figure 2, Tables 2–3.
+**Reference:** [KDIGO 2024 Clinical Practice Guideline for the Evaluation and Management of Chronic Kidney Disease](https://kdigo.org/guidelines/ckd-evaluation-and-management/), Figure 13, Tables 2–3.
 
 **License:** MIT (see [LICENSE](LICENSE)).
