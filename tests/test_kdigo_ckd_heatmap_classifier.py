@@ -43,7 +43,7 @@ def test_specialized_workers():
 
 
 def test_supervisor_consensus_and_audit(monkeypatch):
-    monkeypatch.setenv("AUDIT_SECRET_KEY", "test-only-secret-key-not-for-production")
+    monkeypatch.setenv("AUDIT_SECRET_KEY", "unit-suite-ephemeral-secret-key-2026")
     supervisor = SystemSupervisor(model_provider="mock")
     payload = SystemTaskPayload(
         task_id="TASK-PROD-01",
