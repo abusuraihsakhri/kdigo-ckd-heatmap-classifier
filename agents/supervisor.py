@@ -76,5 +76,5 @@ class SystemSupervisor:
 
     def query_supervisory_chat(self, query: str) -> str:
         PHIGuard.assert_no_phi(query)
-        prompt = f"Supervisor inquiry for Kdigo Ckd Heatmap Classifier under CAP / CLSI / ISO Standards: {query}"
+        prompt = f"Supervisor inquiry for Kdigo Ckd Heatmap Classifier in demonstration mock mode: {query}"
         return self.llm.invoke(prompt)
