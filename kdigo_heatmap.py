@@ -2,7 +2,7 @@
 """KDIGO 2024 CKD GFR–albuminuria risk heatmap.
 
 Risk classification is not a diagnosis or a patient-specific treatment decision.
-Source: KDIGO 2024 CKD Guideline, Figure 2 and Tables 2–3.
+Source: KDIGO 2024 CKD Guideline, Figure 13 and Tables 2–3.
 https://kdigo.org/guidelines/ckd-evaluation-and-management/
 """
 import argparse
@@ -51,7 +51,7 @@ def classify_ckd(egfr: float, acr_mg_g: float) -> Dict[str, Any]:
     g = (0 if egfr >= 90 else 1 if egfr >= 60 else
          2 if egfr >= 45 else 3 if egfr >= 30 else
          4 if egfr >= 15 else 5)
-    a = 0 if acr_mg_g < 30 else 1 if acr_mg_g <= 300 else 2
+    a = 0 if acr_mg_g < 30 else 1 if acr_mg_g < 300 else 2
     risk = RISK_GRID[g][a]
     return {
         "egfr": egfr,
