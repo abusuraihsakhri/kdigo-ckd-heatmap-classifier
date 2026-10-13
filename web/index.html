@@ -1,236 +1,116 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kdigo Ckd Heatmap Classifier — Operations Console</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #090d16;
-            --card: #111827;
-            --border: #1f293d;
-            --accent: #3b82f6;
-            --accent-glow: rgba(59, 130, 246, 0.25);
-            --text: #f3f4f6;
-            --text-muted: #9ca3af;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --success: #10b981;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            padding: 2rem;
-            min-height: 100vh;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        .header-title h1 { font-size: 1.6rem; font-weight: 700; color: #fff; }
-        .header-title p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
-        .badge {
-            display: inline-block;
-            padding: 0.3rem 0.8rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            background: var(--accent-glow);
-            color: var(--accent);
-            border: 1px solid var(--accent);
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 1.5rem;
-        }
-        .card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
-        .card h2 {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; }
-        input, select, textarea {
-            width: 100%;
-            padding: 0.65rem 0.9rem;
-            background: #0d1322;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: #fff;
-            font-family: inherit;
-            font-size: 0.9rem;
-        }
-        input:focus, textarea:focus { outline: none; border-color: var(--accent); }
-        .btn {
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            padding: 0.7rem 1.4rem;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            width: 100%;
-        }
-        .btn:hover { background: #2563eb; }
-        .terminal {
-            background: #060911;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: #10b981;
-            height: 380px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-        }
-        .metrics-bar {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .metric-box {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
-        }
-        .metric-val { font-size: 1.4rem; font-weight: 700; color: #fff; margin-top: 0.25rem; }
-        .metric-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Local KDIGO 2024 eGFR and urine ACR risk heatmap classifier">
+  <title>KDIGO CKD Risk Heatmap | eGFR &amp; ACR</title>
+  <style>
+    :root { color-scheme: light; font: 16px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; --ink:#173149; --muted:#516777; --edge:#d7e1e9; --main:#126c81; --background:#f5f9fb; }
+    * { box-sizing: border-box; }
+    body { margin:0; color:var(--ink); background:var(--background); }
+    header { background:#0d3146; color:white; padding:1.3rem max(1.2rem,calc((100vw - 1100px)/2)); }
+    header .kicker { color:#a5dce2; font-weight:700; letter-spacing:.14em; text-transform:uppercase; font-size:.78rem; }
+    header h1 { margin:.15rem 0; font-size:clamp(1.35rem,3vw,2rem); line-height:1.2; }
+    header p { color:#dcecf1; margin:.4rem 0 0; }
+    main { max-width:1100px; margin:1.3rem auto 3rem; padding:0 1rem; }
+    .intro { margin-bottom:1.2rem; color:var(--muted); }
+    .layout { display:grid; grid-template-columns:minmax(270px, .83fr) minmax(0, 1.45fr); gap:1.15rem; align-items:start; }
+    .panel { background:white; border:1px solid var(--edge); border-radius:12px; padding:1.2rem; box-shadow:0 3px 14px #1639560b; }
+    h2 { font-size:1.15rem; margin:0 0 .9rem; }
+    h3 { font-size:1rem; margin:.5rem 0; }
+    label { display:block; font-weight:650; margin:.9rem 0 .3rem; }
+    .help { display:block; color:var(--muted); font-size:.82rem; }
+    input[type=number], input[type=file] { width:100%; border:1px solid #91aabd; border-radius:7px; padding:.65rem; font:inherit; background:white; color:var(--ink); }
+    input:focus-visible, button:focus-visible, a:focus-visible { outline:3px solid #f4ac4d; outline-offset:3px; }
+    button { border-radius:7px; border:1px solid #126c81; background:var(--main); color:#fff; padding:.65rem 1rem; font:inherit; font-weight:650; cursor:pointer; }
+    button.secondary { color:var(--ink); background:white; border-color:#91aabd; }
+    button:disabled { opacity:.45; cursor:not-allowed; }
+    .button-row { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:1.1rem; }
+    .result { margin-top:1.1rem; padding:1rem; border:1px solid var(--edge); border-radius:9px; background:#f7fbfc; min-height:6rem; }
+    .risk-name { font-size:1.35rem; font-weight:760; margin:.25rem 0; text-transform:capitalize; }
+    .muted { color:var(--muted); font-size:.88rem; }
+    .error { color:#9c2121; font-weight:650; }
+    .heatmap-scroll { overflow-x:auto; }
+    table { width:100%; border-collapse:separate; border-spacing:5px; table-layout:fixed; min-width:470px; }
+    th { text-align:center; font-size:.8rem; line-height:1.25; padding:.4rem .2rem; }
+    th.rowhead { text-align:left; width:23%; white-space:nowrap; }
+    td { border-radius:7px; text-align:center; font-weight:650; font-size:.78rem; line-height:1.25; height:64px; border:2px solid transparent; padding:.3rem; }
+    .low { background:#ddf0df; color:#20562a; }
+    .moderately-increased { background:#fff3bb; color:#654e0a; }
+    .high { background:#ffddb5; color:#733e0c; }
+    .very-high { background:#f8c9ca; color:#7e1720; }
+    td.active { border-color:#15364d; outline:2px solid #15364d; outline-offset:1px; box-shadow:0 0 0 2px white inset; }
+    .legend { display:flex; flex-wrap:wrap; gap:.5rem 1rem; font-size:.78rem; margin-top:.7rem; }
+    .key { display:inline-block; height:.75rem; width:.75rem; vertical-align:middle; margin-right:.25rem; border:1px solid #3344; }
+    .note { margin-top:1rem; border-left:4px solid #3b8192; background:#edf7f9; padding:.75rem 1rem; font-size:.88rem; }
+    .batch { margin-top:1.2rem; }
+    #batch-summary { margin:.6rem 0; }
+    footer { margin-top:1.2rem; color:var(--muted); font-size:.85rem; }
+    a { color:#086779; }
+    @media (max-width:750px) { .layout { grid-template-columns:1fr; } .panel { padding:1rem; } }
+  </style>
+  <script src="./classifier.js" defer></script>
+  <script src="./app.js" defer></script>
 </head>
 <body>
-
-    <div class="header">
-        <div class="header-title">
-            <h1>Kdigo Ckd Heatmap Classifier</h1>
-            <p>Domain: Clinical & Cryptographic AI | Standard: CAP / CLSI / NIST Standards | LabMind-Atlas Architecture</p>
+  <header>
+    <div class="kicker">Nephrology reference tool · KDIGO 2024</div>
+    <h1>CKD GFR–Albuminuria Risk Heatmap</h1>
+    <p>Explore kidney function and albuminuria categories with an interactive risk matrix.</p>
+  </header>
+  <main>
+    <p class="intro">Enter estimated glomerular filtration rate (eGFR) and urine albumin-to-creatinine ratio (ACR). The classification runs entirely in your browser; no patient data are sent to a server.</p>
+    <div class="layout">
+      <section class="panel" aria-labelledby="form-heading">
+        <h2 id="form-heading">Individual classification</h2>
+        <form id="classify-form" novalidate>
+          <label for="egfr">eGFR</label>
+          <input id="egfr" name="egfr" type="number" min="0" step="any" value="52" required inputmode="decimal">
+          <span class="help">mL/min/1.73 m²</span>
+          <label for="acr">Urine ACR</label>
+          <input id="acr" name="acr" type="number" min="0" step="any" value="125" required inputmode="decimal">
+          <span class="help">mg/g; values exactly 300 mg/g are A2 under KDIGO 2024 Table 3.</span>
+          <div class="button-row">
+            <button type="submit">Classify</button>
+            <button type="button" class="secondary" id="clear">Clear</button>
+          </div>
+        </form>
+        <div class="result" id="result" aria-live="polite" aria-atomic="true">
+          <span class="muted">Submit values to display GFR stage, albuminuria category, and risk group.</span>
         </div>
-        <div>
-            <span class="badge">Air-Gapped Active</span>
-            <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; border-color: #10b981;">Zero-PHI Guard Active</span>
+      </section>
+      <section class="panel" aria-labelledby="heatmap-heading">
+        <h2 id="heatmap-heading">KDIGO risk heatmap</h2>
+        <p class="muted">GFR categories (rows) × albuminuria (columns). The selected cell is outlined.</p>
+        <div class="heatmap-scroll">
+          <table aria-label="KDIGO risk matrix by GFR and albuminuria">
+            <thead><tr><th scope="col">eGFR</th><th scope="col">A1<br>&lt;30 mg/g</th><th scope="col">A2<br>30–300 mg/g</th><th scope="col">A3<br>&gt;300 mg/g</th></tr></thead>
+            <tbody id="heatmap-body"></tbody>
+          </table>
         </div>
+        <div class="legend" aria-label="Risk categories">
+          <span><i class="key low"></i>Low</span>
+          <span><i class="key moderately-increased"></i>Moderately increased</span>
+          <span><i class="key high"></i>High</span>
+          <span><i class="key very-high"></i>Very high</span>
+        </div>
+        <div class="note"><strong>Important:</strong> A heatmap cell is not a CKD diagnosis, individual prognostic probability, or treatment recommendation. CKD typically requires abnormalities present for at least three months. For G1A1 or G2A1, other evidence of kidney damage is needed to establish CKD.</div>
+      </section>
     </div>
-
-    <div class="metrics-bar">
-        <div class="metric-box">
-            <div class="metric-label">System Status</div>
-            <div class="metric-val" style="color: var(--success);" id="m-status">OPTIMAL</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">Tasks Processed</div>
-            <div class="metric-val" id="m-tasks">142</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">Audit Blocks Signed</div>
-            <div class="metric-val" id="m-audit">142</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">PHI Interceptions</div>
-            <div class="metric-val" style="color: var(--accent);" id="m-phi">0</div>
-        </div>
-    </div>
-
-    <div class="grid">
-        <div class="card">
-            <h2>⚙️ Dispatch Distributed Component Audit</h2>
-            <div class="form-group">
-                <label>Task / Sample ID</label>
-                <input type="text" id="task_id" value="TASK-2026-LIVE-01">
-            </div>
-            <div class="form-group">
-                <label>Target Identifier</label>
-                <input type="text" id="target_id" value="SPECIMEN-ALPHA-77">
-            </div>
-            <div class="form-group">
-                <label>Primary Measurement / Value</label>
-                <input type="number" id="primary_metric" value="29.4" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Secondary Metric / Kinetic Index</label>
-                <input type="number" id="secondary_metric" value="14.8" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Status / Phenotype Descriptor</label>
-                <input type="text" id="status_descriptor" value="DISCORDANT_ANOMALY">
-            </div>
-            <div class="form-group">
-                <label><input type="checkbox" id="is_critical" checked> Trigger Emergency / Critical Flag</label>
-            </div>
-            <button class="btn" onclick="runAudit()">Execute Distributed Component Audit</button>
-        </div>
-
-        <div class="card">
-            <h2>📊 Real-Time Consensus Dossier & Audit Log</h2>
-            <div class="terminal" id="outputConsole">// Kdigo Ckd Heatmap Classifier Operations Console Ready
-// Connection established with Air-Gapped Supervisor
-// Cryptographic HMAC-SHA256 audit ledger loaded.
-// Ready for live task payload dispatch...</div>
-        </div>
-    </div>
-
-    <script>
-        async function runAudit() {
-            const consoleEl = document.getElementById('outputConsole');
-            consoleEl.innerText = "// Dispatching task across specialized workers...
-// Invoking InvariantQCWorker, SafetyEscalationWorker, ProtocolWorker...";
-
-            const payload = {
-                task_id: document.getElementById('task_id').value,
-                target_identifier: document.getElementById('target_id').value,
-                primary_metric: parseFloat(document.getElementById('primary_metric').value),
-                secondary_metric: parseFloat(document.getElementById('secondary_metric').value),
-                status_descriptor: document.getElementById('status_descriptor').value,
-                is_critical_flag: document.getElementById('is_critical').checked
-            };
-
-            try {
-                const res = await fetch('/api/audit', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                consoleEl.innerText = JSON.stringify(data, null, 2);
-                document.getElementById('m-tasks').innerText = parseInt(document.getElementById('m-tasks').innerText) + 1;
-                document.getElementById('m-audit').innerText = parseInt(document.getElementById('m-audit').innerText) + 1;
-            } catch (err) {
-                consoleEl.innerText = "// Offline / Simulation Output:\n" + JSON.stringify({
-                    dossier_id: "DOSSIER-SIM-" + Math.floor(Math.random()*10000),
-                    system: "kdigo-ckd-heatmap-classifier",
-                    domain: "Clinical & Cryptographic AI",
-                    task_id: payload.task_id,
-                    overall_urgency: payload.is_critical_flag ? "CRITICAL_STAT_PANIC" : "ELEVATED_RISK",
-                    integrity_status: "DISCORDANT_ANOMALY",
-                    alerts: [
-                        { worker: "InvariantQCWorker", alert: "Primary metric exceeds upper reference bound" },
-                        { worker: "SafetyEscalationWorker", alert: "Critical emergency interlock flag active" }
-                    ],
-                    audit_hash: "HMAC_SHA256_e83f9a72b941d6c381f9"
-                }, null, 2);
-            }
-        }
-    </script>
+    <section class="panel batch" aria-labelledby="batch-heading">
+      <h2 id="batch-heading">Batch CSV classification</h2>
+      <p class="muted">Upload a CSV containing <code>egfr</code> and <code>acr_mg_g</code> columns. Other columns are retained. Invalid rows remain in the output with an error message. Files are processed locally (maximum 5 MiB and 10,000 records). Avoid including directly identifying patient information.</p>
+      <label for="csv-upload">CSV file</label>
+      <input id="csv-upload" type="file" accept=".csv,text/csv">
+      <div class="button-row">
+        <button id="download" type="button" disabled>Download classified CSV</button>
+      </div>
+      <p id="batch-summary" class="muted" role="status" aria-live="polite"></p>
+    </section>
+    <footer>
+      Based on <a href="https://kdigo.org/guidelines/ckd-evaluation-and-management/" target="_blank" rel="noopener noreferrer">KDIGO 2024 Clinical Practice Guideline for the Evaluation and Management of CKD</a>, Figure 2 and Tables 2–3. For educational and research use; not a medical device or substitute for clinical judgment.
+    </footer>
+  </main>
 </body>
 </html>
