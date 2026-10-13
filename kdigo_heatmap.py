@@ -115,6 +115,12 @@ def process_batch(input_csv: str, output_csv: str) -> None:
                         "stage": stage, "risk_category": risk, "error": detail})
     fields = [c for c in columns if c not in ("stage", "risk_category", "error")]
     fields += ["stage", "risk_category", "error"]
+    # Prevent formula execution if resulting CSV is opened in spreadsheet software.
+    for record in results:
+        for key, value in record.items():
+            text = str(value) if value is not None else ""
+            if text.lstrip().startswith(("=", "+", "-", "@")):
+                record[key] = "'" + text
     with open(dst, "w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields, extrasaction="ignore")
         writer.writeheader()
