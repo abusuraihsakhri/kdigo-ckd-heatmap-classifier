@@ -3,6 +3,7 @@ Supervisor Orchestrator & Operations Intelligence for Kdigo Ckd Heatmap Classifi
 Domain: Clinical & Biomedical AI
 """
 import uuid
+import json
 from typing import Dict, Any, List, Optional
 from .base import AuditLogger, ActionExecutor, PHIGuard
 from .models import SystemTaskPayload, AgentAlert, ConsensusDossier, UrgencyLevel, SystemIntegrityStatus
@@ -25,6 +26,7 @@ class SystemSupervisor:
         PHIGuard.assert_no_phi(payload.task_id)
         PHIGuard.assert_no_phi(payload.target_identifier)
         PHIGuard.assert_no_phi(payload.status_descriptor)
+        PHIGuard.assert_no_phi(json.dumps(payload.attributes, default=str))
 
         # Multi-worker evaluations
         all_alerts: List[AgentAlert] = []
@@ -33,12 +35,11 @@ class SystemSupervisor:
         all_alerts.extend(self.conformance_worker.evaluate(payload))
 
         crit_count = sum(1 for a in all_alerts if a.urgency == UrgencyLevel.CRITICAL_STAT)
-        elev_count = sum(1 for a in all_alerts if a.urgency == UrgencyLevel.ELEVATED)
 
         if crit_count > 0:
             overall_urgency = UrgencyLevel.CRITICAL_STAT
             integrity_status = SystemIntegrityStatus.RECALIBRATION_REQUIRED
-        elif elev_count > 0:
+        elif any(a.urgency == UrgencyLevel.ELEVATED for a in all_alerts):
             overall_urgency = UrgencyLevel.ELEVATED
             integrity_status = SystemIntegrityStatus.DISCORDANT
         else:
@@ -66,7 +67,7 @@ class SystemSupervisor:
             total_alerts=len(all_alerts),
             critical_alerts_count=crit_count,
             alerts=all_alerts,
-            consensus_summary=f"Multi-agent consensus completed with status [{overall_urgency.value}]. Total alerts: {len(all_alerts)}.",
+            consensus_summary=f"Rule-based KDIGO and caller-provided review flags: {overall_urgency.value}. Alerts: {len(all_alerts)}. Not an emergency triage decision.",
             audit_hash=audit_entry["current_hash"],
         )
 
