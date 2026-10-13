@@ -70,7 +70,7 @@
           <span class="help">mL/min/1.73 m²</span>
           <label for="acr">Urine ACR</label>
           <input id="acr" name="acr" type="number" min="0" step="any" value="125" required inputmode="decimal">
-          <span class="help">mg/g; values exactly 300 mg/g are A2 under KDIGO 2024 Table 3.</span>
+          <span class="help">mg/g; Figure 13 uses A3 from 300 mg/g. Table 3 differs at the exact boundary.</span>
           <div class="button-row">
             <button type="submit">Classify</button>
             <button type="button" class="secondary" id="clear">Clear</button>
@@ -85,7 +85,7 @@
         <p class="muted">GFR categories (rows) × albuminuria (columns). The selected cell is outlined.</p>
         <div class="heatmap-scroll">
           <table aria-label="KDIGO risk matrix by GFR and albuminuria">
-            <thead><tr><th scope="col">eGFR</th><th scope="col">A1<br>&lt;30 mg/g</th><th scope="col">A2<br>30–300 mg/g</th><th scope="col">A3<br>&gt;300 mg/g</th></tr></thead>
+            <thead><tr><th scope="col">eGFR</th><th scope="col">A1<br>&lt;30 mg/g</th><th scope="col">A2<br>30–&lt;300 mg/g</th><th scope="col">A3<br>≥300 mg/g</th></tr></thead>
             <tbody id="heatmap-body"></tbody>
           </table>
         </div>
@@ -109,8 +109,9 @@
       <p id="batch-summary" class="muted" role="status" aria-live="polite"></p>
     </section>
     <footer>
-      Based on <a href="https://kdigo.org/guidelines/ckd-evaluation-and-management/" target="_blank" rel="noopener noreferrer">KDIGO 2024 Clinical Practice Guideline for the Evaluation and Management of CKD</a>, Figure 2 and Tables 2–3. For educational and research use; not a medical device or substitute for clinical judgment.
+      Based on <a href="https://kdigo.org/guidelines/ckd-evaluation-and-management/" target="_blank" rel="noopener noreferrer">KDIGO 2024 Clinical Practice Guideline for the Evaluation and Management of CKD</a>, Figure 13 and Tables 2–3. For educational and research use; not a medical device or substitute for clinical judgment.
     </footer>
+    <p class="muted">At exactly ACR 300 mg/g, Figure 13 assigns A3 while Table 3 places it in A2. This heatmap follows Figure 13; review local reporting conventions at the boundary.</p>
   </main>
 </body>
 </html>
