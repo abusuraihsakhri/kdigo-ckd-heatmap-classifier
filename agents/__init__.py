@@ -1,7 +1,2 @@
-"""
-Kdigo Ckd Heatmap Classifier — Enterprise Automated Analytical Suite.
-Domain: Clinical & Biomedical AI
-Standard: CAP / CLSI / ISO Standards
-
-"""
-__version__ = "3.0.0-ENTERPRISE"
+"""Optional rule-based audit utilities; not a clinically validated triage engine."""
+__version__ = "3.1.0"
