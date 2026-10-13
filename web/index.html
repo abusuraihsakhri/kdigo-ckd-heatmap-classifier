@@ -16,7 +16,7 @@
     main { max-width:1100px; margin:1.3rem auto 3rem; padding:0 1rem; }
     .intro { margin-bottom:1.2rem; color:var(--muted); }
     .layout { display:grid; grid-template-columns:minmax(270px, .83fr) minmax(0, 1.45fr); gap:1.15rem; align-items:start; }
-    .panel { background:white; border:1px solid var(--edge); border-radius:12px; padding:1.2rem; box-shadow:0 3px 14px #1639560b; }
+    .panel { min-width:0; background:white; border:1px solid var(--edge); border-radius:12px; padding:1.2rem; box-shadow:0 3px 14px #1639560b; }
     h2 { font-size:1.15rem; margin:0 0 .9rem; }
     h3 { font-size:1rem; margin:.5rem 0; }
     label { display:block; font-weight:650; margin:.9rem 0 .3rem; }
@@ -31,7 +31,7 @@
     .risk-name { font-size:1.35rem; font-weight:760; margin:.25rem 0; text-transform:capitalize; }
     .muted { color:var(--muted); font-size:.88rem; }
     .error { color:#9c2121; font-weight:650; }
-    .heatmap-scroll { overflow-x:auto; }
+    .heatmap-scroll { overflow-x:auto; max-width:100%; }
     table { width:100%; border-collapse:separate; border-spacing:5px; table-layout:fixed; min-width:470px; }
     th { text-align:center; font-size:.8rem; line-height:1.25; padding:.4rem .2rem; }
     th.rowhead { text-align:left; width:23%; white-space:nowrap; }
@@ -48,7 +48,7 @@
     #batch-summary { margin:.6rem 0; }
     footer { margin-top:1.2rem; color:var(--muted); font-size:.85rem; }
     a { color:#086779; }
-    @media (max-width:750px) { .layout { grid-template-columns:1fr; } .panel { padding:1rem; } }
+    @media (max-width:750px) { .layout { grid-template-columns:minmax(0,1fr); } .panel { padding:1rem; } }
   </style>
   <script src="./classifier.js" defer></script>
   <script src="./app.js" defer></script>
