@@ -1,4 +1,4 @@
-/* KDIGO 2024 CKD GFR–albuminuria classification, no network calls. */
+/* KDIGO 2024 CKD Figure 13 heatmap: A3 at ACR >=300 mg/g. Table 3 differs at exactly 300; no network calls. */
 (function (root) {
   'use strict';
   const G = ['G1', 'G2', 'G3a', 'G3b', 'G4', 'G5'];
@@ -27,7 +27,7 @@
     acr_mg_g = numeric(acr_mg_g, 'ACR');
     const g = egfr >= 90 ? 0 : egfr >= 60 ? 1 : egfr >= 45 ? 2 :
       egfr >= 30 ? 3 : egfr >= 15 ? 4 : 5;
-    const a = acr_mg_g < 30 ? 0 : acr_mg_g <= 300 ? 1 : 2;
+    const a = acr_mg_g < 30 ? 0 : acr_mg_g < 300 ? 1 : 2;
     return {
       egfr, acr_mg_g, gfr_category: G[g], albuminuria_category: A[a],
       stage: G[g] + A[a], risk_category: grid[g][a],
