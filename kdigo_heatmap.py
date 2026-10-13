@@ -43,8 +43,10 @@ def _nonnegative_finite(value: Any, name: str) -> float:
 def classify_ckd(egfr: float, acr_mg_g: float) -> Dict[str, Any]:
     """Classify eGFR (mL/min/1.73 m²) and urine ACR (mg/g) by KDIGO 2024.
 
-    ACR boundaries follow KDIGO 2024 Table 3: A1 <30, A2 30–300,
-    A3 >300 mg/g. Do not interpret this risk group as confirmed CKD.
+    ACR cutoffs follow KDIGO 2024 Figure 13: A1 <30, A2 30–<300,
+    A3 >=300 mg/g. Table 3 differs at exactly 300 mg/g, listing
+    A2 as 30–300 and A3 as >300. Figure 13 controls risk mapping.
+    Do not interpret this risk group as confirmed CKD.
     """
     egfr = _nonnegative_finite(egfr, "egfr")
     acr_mg_g = _nonnegative_finite(acr_mg_g, "acr_mg_g")
