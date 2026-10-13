@@ -1,7 +1,7 @@
 """
 Automated Pytest Test Suite for Kdigo Ckd Heatmap Classifier.
 Domain: Clinical & Biomedical AI
-Standard: CAP / CLSI / ISO Standards
+Scope: KDIGO 2024 and rule-based audit demonstration
 """
 import sys
 from pathlib import Path
