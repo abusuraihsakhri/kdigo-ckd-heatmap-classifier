@@ -14,7 +14,7 @@ supervisor = SystemSupervisor(model_provider="mock")
 
 app = FastAPI(
     title="Kdigo Ckd Heatmap Classifier API",
-    description="Enterprise Distributed Component Platform (Clinical & Biomedical AI)",
+    description="KDIGO 2024 eGFR/ACR risk classification and optional unvalidated audit demonstration",
     version="3.1.0",
 )
 
@@ -43,7 +43,7 @@ def api_classify(payload: ClassificationRequest):
 
 @app.get("/health")
 def health():
-    return {"status": "HEALTHY", "service": "kdigo-ckd-heatmap-classifier", "domain": "Clinical & Biomedical AI", "standard": "KDIGO 2024", "version": "3.1.0"}
+    return {"status": "HEALTHY", "service": "kdigo-ckd-heatmap-classifier", "domain": "nephrology", "standard": "KDIGO 2024", "version": "3.1.0"}
 
 
 @app.get("/metrics")
@@ -71,4 +71,5 @@ def api_chat(req: ChatRequest):
 
 @app.get("/api/audit/logs")
 def api_audit_logs():
-    return {"audit_trail": AuditLogger.get_trail(), "verified": AuditLogger.verify_integrity(), "durability": "process-local"}
+    trail = AuditLogger.get_trail()
+    return {"audit_trail": trail, "verified": bool(trail) and AuditLogger.verify_integrity(), "durability": "process-local"}
