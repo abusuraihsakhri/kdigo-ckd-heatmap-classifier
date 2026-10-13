@@ -73,6 +73,8 @@ node --check web/app.js
 
 Python tests require `AUDIT_SECRET_KEY` for audit actions (the CI workflow generates one). CI tests Python 3.10–3.12 and Node 22. The live browser/Pages deployment must be checked independently of local unit tests.
 
+The optional `enrichment.py` engines use synthetic thresholds and are retained only for demonstration; they are not validated models for AKI staging, drug interactions, or clinical recommendations.
+
 ## Technical notes
 
 - Python standard library for core risk classification; optional FastAPI/Pydantic for audit API.
